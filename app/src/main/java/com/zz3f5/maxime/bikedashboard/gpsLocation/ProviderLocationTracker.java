@@ -16,7 +16,7 @@ public class ProviderLocationTracker implements LocationListener, LocationTracke
     private static final long MIN_UPDATE_DISTANCE = 10;
 
     // The minimum time between updates in milliseconds
-    private static final long MIN_UPDATE_TIME = 1000 * 10; //10 seconds
+    private static final long MIN_UPDATE_TIME = 1000 * 1; //1 seconds
 
     private LocationManager lm;
 

@@ -33,11 +33,12 @@ public class locationListener implements LocationTracker.LocationUpdateListener{
         String alt;
         String acc;
 
-        public locationListener(Context c, gpsNetworkLocation g, GoogleMap m){
+        public locationListener(Context c, gpsNetworkLocation g, GoogleMap m, ArrayList<LatLng> l, Polyline li){
             cont = c;
             gps = g;
             map = m;
-            pointList = new ArrayList<LatLng>();
+            pointList = l;
+            line = li;
         }
 
 
@@ -83,7 +84,7 @@ public class locationListener implements LocationTracker.LocationUpdateListener{
 
             if(counter == 1) {
                 Marker mP = map.addMarker(new MarkerOptions().
-                        position(position).title("position actuelle"));
+                        position(position).title("Départ"));
             }
 
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15));
