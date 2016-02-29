@@ -7,11 +7,13 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.zz3f5.maxime.bikedashboard.R;
 
 import java.util.ArrayList;
 
@@ -84,7 +86,7 @@ public class locationListener implements LocationTracker.LocationUpdateListener{
 
             if(counter == 1) {
                 Marker mP = map.addMarker(new MarkerOptions().
-                        position(position).title("Départ"));
+                        position(position).title("Départ").icon(BitmapDescriptorFactory.fromResource(R.drawable.dd_start)));
             }
 
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15));

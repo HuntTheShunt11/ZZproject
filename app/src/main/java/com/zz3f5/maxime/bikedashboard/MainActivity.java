@@ -5,11 +5,14 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -30,6 +33,9 @@ public class MainActivity extends AppCompatActivity {
     private GoogleMap googleMap;
     private ArrayList<LatLng> pointList;
     private Polyline line;
+    private gpsNetworkLocation gps;
+    private locationListener listener;
+    private boolean tripEnded = false;
 
 
 
@@ -78,13 +84,10 @@ public class MainActivity extends AppCompatActivity {
         Toast toast = Toast.makeText(this, "maps ok, on passe à la localisation gps", duration);
         toast.show();
 
-        pointList = new ArrayList<>();
-        gpsNetworkLocation gps = new gpsNetworkLocation(this);
-        locationListener listener = new locationListener(this, gps, googleMap, pointList, line);
-        gps.start(listener);
-
-        Toast toast1 = Toast.makeText(this, "gpsListener lancé", duration);
-        toast1.show();
+        pointList = new ArrayList<>();//initialisé ici pour éviter bug null sur le onRestart
+        /*gps = new gpsNetworkLocation(this);
+        listener = new locationListener(this, gps, googleMap, pointList, line);*/
+        //gps.start(listener);
 
 
     }
@@ -96,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(pointList.size()!=0){
             Marker mP = googleMap.addMarker(new MarkerOptions().
-                    position(pointList.get(0)).title("Départ"));
+                    position(pointList.get(0)).title("Départ").icon(BitmapDescriptorFactory.fromResource(R.drawable.dd_start)));
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pointList.get(0), 15));
 
             if(pointList.size() > 1) {
@@ -106,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
                     options.add(point);
                 }
                 line = googleMap.addPolyline(options);
+
+                if(tripEnded){
+                    googleMap.addMarker(new MarkerOptions().
+                            position(pointList.get(pointList.size()-1)).title("Arrivée").icon(BitmapDescriptorFactory.fromResource(R.drawable.dd_end)));
+                }
             }
 
         }
@@ -163,6 +171,53 @@ public class MainActivity extends AppCompatActivity {
                 Uri.parse("android-app://com.zz3f5.maxime.bikedashboard/http/host/path")
         );
         AppIndex.AppIndexApi.start(client, viewAction);*/
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.action_bar, menu); //on defini le menu de l'application avec le fichier xml correspondant (action_bar)
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            //si l'action de départ de trip a ete selectionnee
+            case R.id.action_tripStart:
+                pointList = new ArrayList<>();
+                gps = new gpsNetworkLocation(this);
+                listener = new locationListener(this, gps, googleMap, pointList, line);
+                gps.start(listener);
+                Toast toast = Toast.makeText(this, "clic start, gps listener ok", Toast.LENGTH_LONG);
+                toast.show();
+                break;
+            case R.id.action_tripStop:
+                Toast toast2 = Toast.makeText(this, "clic stop", Toast.LENGTH_LONG);
+                toast2.show();
+                if(pointList.size()!=0){
+                    Marker mP = googleMap.addMarker(new MarkerOptions().
+                            position(pointList.get(0)).title("Départ").icon(BitmapDescriptorFactory.fromResource(R.drawable.dd_start)));
+                    googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pointList.get(0), 15));
+
+                    if(pointList.size() > 1) {
+                        PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE).geodesic(true);
+                        for (int i = 0; i < pointList.size(); i++) {
+                            LatLng point = pointList.get(i);
+                            options.add(point);
+                        }
+                        line = googleMap.addPolyline(options);
+                        googleMap.addMarker(new MarkerOptions().
+                                position(pointList.get(pointList.size()-1)).title("Arrivée").icon(BitmapDescriptorFactory.fromResource(R.drawable.dd_end)));
+                    }
+                    tripEnded = true;
+                }
+                gps.stop();
+                break;
+            default:
+                break;
+        }
+
+        return true;
     }
 
 }
