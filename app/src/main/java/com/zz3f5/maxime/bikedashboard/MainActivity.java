@@ -261,9 +261,8 @@ public class MainActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(Intent.ACTION_SEND);
                 intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"email@example.com"});
-                intent.putExtra(Intent.EXTRA_SUBJECT, "subject here");
-                intent.putExtra(Intent.EXTRA_TEXT, "body text");
+                intent.putExtra(Intent.EXTRA_SUBJECT, "partage de ballade moto");
+                intent.putExtra(Intent.EXTRA_TEXT, "Voici un export d'une ballade que je viens de faire!");
                 intent.putExtra(Intent.EXTRA_STREAM, uri);
                 startActivity(Intent.createChooser(intent, "Envoi d'un email"));
 
