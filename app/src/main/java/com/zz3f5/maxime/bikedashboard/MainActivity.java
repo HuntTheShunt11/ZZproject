@@ -2,7 +2,10 @@ package com.zz3f5.maxime.bikedashboard;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -19,9 +22,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.zz3f5.maxime.bikedashboard.gpsLocation.gpsNetworkLocation;
+import com.zz3f5.maxime.bikedashboard.gpsLocation.gpxExport;
 import com.zz3f5.maxime.bikedashboard.gpsLocation.locationListener;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Random;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -212,12 +218,65 @@ public class MainActivity extends AppCompatActivity {
                     tripEnded = true;
                 }
                 gps.stop();
+                endOfTripMsg();
                 break;
             default:
                 break;
         }
 
         return true;
+    }
+
+    public void endOfTripMsg(){
+        AlertDialog.Builder endBuilder = new AlertDialog.Builder(MainActivity.this);
+        endBuilder.setTitle("Fin de trajet");
+        endBuilder.setMessage("Voulez-vous partager votre trajet par email?");
+
+        endBuilder.setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked yes button
+                // on cree le fichier d'export gpx et on lance l'application email
+
+                String rootPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).toString();
+                File fileDirectory = new File(rootPath + "/saved_images");
+                fileDirectory.mkdirs();
+
+                Random generator = new Random();
+                int nb = 10;
+                nb = generator.nextInt(nb);
+
+                String filename = "exportGpxMoto-" + nb + ".gpx";
+                File file = new File(fileDirectory, filename);
+                if (file.exists())
+                    file.delete();
+                try {
+                    gpxExport.writeToFile(file,pointList);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Toast.makeText(getApplicationContext(),file.getAbsolutePath(),Toast.LENGTH_LONG).show();
+                //creation du mail
+                Uri uri = Uri.parse("file://" + file.getAbsolutePath());
+
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_EMAIL, new String[] {"email@example.com"});
+                intent.putExtra(Intent.EXTRA_SUBJECT, "subject here");
+                intent.putExtra(Intent.EXTRA_TEXT, "body text");
+                intent.putExtra(Intent.EXTRA_STREAM, uri);
+                startActivity(Intent.createChooser(intent, "Envoi d'un email"));
+
+
+            }
+        });
+        endBuilder.setNegativeButton("Non", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked no button
+            }
+        });
+        AlertDialog dialog = endBuilder.create();
+        dialog.show();
     }
 
 }
