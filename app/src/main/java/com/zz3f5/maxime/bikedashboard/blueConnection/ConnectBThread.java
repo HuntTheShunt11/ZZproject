@@ -8,6 +8,14 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.github.pires.obd.commands.protocol.EchoOffCommand;
+import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
+import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
+import com.github.pires.obd.commands.protocol.TimeoutCommand;
+import com.github.pires.obd.commands.SpeedCommand;
+import com.github.pires.obd.enums.ObdProtocols;
+import com.github.pires.obd.commands.engine.RPMCommand;
+import com.github.pires.obd.commands.*;
 import com.zz3f5.maxime.bikedashboard.MainActivity;
 
 import java.io.IOException;
@@ -81,4 +89,10 @@ public class ConnectBThread extends Thread {
             mmSocket.close();
         } catch (IOException e) { }
     }
+
+    public BluetoothSocket getSocket(){
+        return mmSocket;
+    }
+
+
 }
