@@ -39,9 +39,17 @@
         android:id="@+id/speed"
         android:textSize="30dp"
         android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@+id/coolTemp"
+        android:layout_toStartOf="@+id/coolTemp" />
+
+    <TextView
+        android:layout_width="150dp"
+        android:layout_height="70dp"
+        android:text="- °C"
+        android:id="@+id/coolTemp"
+        android:textSize="30dp"
+        android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginRight="96dp"
-        android:layout_marginEnd="96dp" />
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>

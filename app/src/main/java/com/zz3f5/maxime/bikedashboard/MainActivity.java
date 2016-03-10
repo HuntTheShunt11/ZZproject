@@ -24,6 +24,7 @@ import com.github.pires.obd.commands.protocol.EchoOffCommand;
 import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
 import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
 import com.github.pires.obd.commands.protocol.TimeoutCommand;
+import com.github.pires.obd.commands.temperature.EngineCoolantTemperatureCommand;
 import com.github.pires.obd.enums.ObdProtocols;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -58,6 +59,9 @@ public class MainActivity extends AppCompatActivity {
     private gpsNetworkLocation gps;
     private locationListener listener;
     private boolean tripEnded = false;
+    private boolean obdUsed = false;
+    private ArrayList<Integer> engineSpeedValues = new ArrayList<>();
+    private int counterNbEngineSpeedSend = 0;
 
     private Handler mUiHandler = new Handler();
 
@@ -69,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     public TextView engineSpeedGauge ;
     public TextView speedGauge ;
+    public TextView coolTempGauge ;
 
 
 
@@ -83,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
         engineSpeedGauge = (TextView) findViewById(R.id.engineSpeed);
         speedGauge = (TextView) findViewById(R.id.speed);
+        coolTempGauge = (TextView) findViewById(R.id.coolTemp);
 
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -180,8 +186,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 // the user clicked on colors[which]
                 String itemClicked = pairedDevicesArray.getItem(which);
-                Toast toast = Toast.makeText(getApplicationContext(), "user clicked " + itemClicked, Toast.LENGTH_LONG);
-                toast.show();
+                /*Toast toast = Toast.makeText(getApplicationContext(), "user clicked " + itemClicked, Toast.LENGTH_LONG);
+                toast.show();*/
 
                 Iterator it = pairedDevices.iterator();
                 while (it.hasNext()) {
@@ -196,6 +202,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast resultBt = Toast.makeText(getApplicationContext(), "Connexion au dongle ok!", Toast.LENGTH_LONG);
                         resultBt.show();
                         if (connectBThread.getSocket().isConnected()) {
+                            obdUsed = true;
                             launchObdThread();
                         }
                     }
@@ -215,26 +222,32 @@ public class MainActivity extends AppCompatActivity {
                 configOBD();
                 final RPMCommand engineRpmCommand = new RPMCommand();
                 final SpeedCommand speedCommand = new SpeedCommand();
+                final EngineCoolantTemperatureCommand engineCoolantTemp = new EngineCoolantTemperatureCommand();
                 while (!Thread.currentThread().isInterrupted())
                 {
-                    /*Toast toast1 = Toast.makeText(getApplicationContext(), "thread non interrompu", Toast.LENGTH_LONG);
-                    toast1.show();*/
                     try {
                         engineRpmCommand.run(connectBThread.getSocket().getInputStream(), connectBThread.getSocket().getOutputStream());
                         speedCommand.run(connectBThread.getSocket().getInputStream(), connectBThread.getSocket().getOutputStream());
+                        engineCoolantTemp.run(connectBThread.getSocket().getInputStream(), connectBThread.getSocket().getOutputStream());
                     }catch(Exception e){
 
                     }
 
                     // TODO handle commands result
-                    Log.d("bluetooth connection", "RPM: " + engineRpmCommand.getFormattedResult());
-                    Log.d("bluetooth connection", "Speed: " + speedCommand.getFormattedResult());
+                    Log.d("obdThread", "RPM: " + engineRpmCommand.getFormattedResult());
+                    Log.d("obdThread", "Speed: " + speedCommand.getFormattedResult());
+                    Log.d("obdThread", "Engine Coolant Temp: " + engineCoolantTemp.getFormattedResult());
 
                     mUiHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             speedGauge.setText(speedCommand.getFormattedResult());
                             engineSpeedGauge.setText(engineRpmCommand.getFormattedResult());
+                            coolTempGauge.setText(engineCoolantTemp.getTemperature() + "°C");
+
+                            counterNbEngineSpeedSend++;
+                            engineSpeedValues.add(engineRpmCommand.getRPM());
+
                         }
                     });
 
@@ -247,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 
                     new LineFeedOffCommand().run(connectBThread.getSocket().getInputStream(), connectBThread.getSocket().getOutputStream());
 
-                    new TimeoutCommand(60).run(connectBThread.getSocket().getInputStream(), connectBThread.getSocket().getOutputStream());
+                    new TimeoutCommand(10).run(connectBThread.getSocket().getInputStream(), connectBThread.getSocket().getOutputStream());
 
                     new SelectProtocolCommand(ObdProtocols.AUTO).run(connectBThread.getSocket().getInputStream(), connectBThread.getSocket().getOutputStream());
                 }catch(Exception e){
@@ -268,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestart() {
         super.onRestart();
 
-        if(pointList.size()!=0){
+        if(pointList != null && pointList.size()!=0){
             Marker mP = googleMap.addMarker(new MarkerOptions().
                     position(pointList.get(0)).title("Départ").icon(BitmapDescriptorFactory.fromResource(R.drawable.dd_start)));
             googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pointList.get(0), 15));
@@ -359,11 +372,11 @@ public class MainActivity extends AppCompatActivity {
                 gps = new gpsNetworkLocation(this);
                 listener = new locationListener(this, gps, googleMap, pointList, line);
                 gps.start(listener);
-                Toast toast = Toast.makeText(this, "clic start, gps listener ok", Toast.LENGTH_LONG);
+                Toast toast = Toast.makeText(this, "Début du trajet", Toast.LENGTH_LONG);
                 toast.show();
                 break;
             case R.id.action_tripStop:
-                Toast toast2 = Toast.makeText(this, "clic stop", Toast.LENGTH_LONG);
+                Toast toast2 = Toast.makeText(this, "Fin du trajet", Toast.LENGTH_LONG);
                 toast2.show();
                 if(pointList.size()!=0){
                     Marker mP = googleMap.addMarker(new MarkerOptions().
@@ -415,22 +428,29 @@ public class MainActivity extends AppCompatActivity {
                 if (file.exists())
                     file.delete();
                 try {
-                    gpxExport.writeToFile(file,pointList);
-                }
-                catch (Exception e) {
+                    gpxExport.writeToFile(file, pointList);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-                Toast.makeText(getApplicationContext(),file.getAbsolutePath(),Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), file.getAbsolutePath(), Toast.LENGTH_LONG).show();
                 //creation du mail
                 Uri uri = Uri.parse("file://" + file.getAbsolutePath());
 
                 Intent intent = new Intent(Intent.ACTION_SEND);
                 intent.setType("text/plain");
                 intent.putExtra(Intent.EXTRA_SUBJECT, "partage de ballade moto");
-                intent.putExtra(Intent.EXTRA_TEXT, "Voici un export d'une ballade que je viens de faire!");
+                if (obdUsed == false) {
+                    intent.putExtra(Intent.EXTRA_TEXT, "Voici un export d'une ballade que je viens de faire!");
+                } else {
+                    int averageEngineSpeed = 0;
+                    for (int i = 0; i < engineSpeedValues.size(); i++) {
+                        averageEngineSpeed += engineSpeedValues.get(i);
+                    }
+                    averageEngineSpeed = averageEngineSpeed / counterNbEngineSpeedSend;
+                    intent.putExtra(Intent.EXTRA_TEXT, "Voici un export d'une ballade que je viens de faire! Régime moteur moyen : " + averageEngineSpeed);
+                }
                 intent.putExtra(Intent.EXTRA_STREAM, uri);
                 startActivity(Intent.createChooser(intent, "Envoi d'un email"));
-
 
             }
         });

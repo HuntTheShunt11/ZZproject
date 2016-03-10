@@ -8,16 +8,6 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.github.pires.obd.commands.protocol.EchoOffCommand;
-import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
-import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
-import com.github.pires.obd.commands.protocol.TimeoutCommand;
-import com.github.pires.obd.commands.SpeedCommand;
-import com.github.pires.obd.enums.ObdProtocols;
-import com.github.pires.obd.commands.engine.RPMCommand;
-import com.github.pires.obd.commands.*;
-import com.zz3f5.maxime.bikedashboard.MainActivity;
-
 import java.io.IOException;
 import java.util.UUID;
 
@@ -69,7 +59,7 @@ public class ConnectBThread extends Thread {
             // Unable to connect; close the socket and get out
             Log.e("bluetooth socket", "connection failed!");
             Log.e("bluetooth socket", connectException.getMessage());
-            Toast toast = Toast.makeText(mmContext, "Bluetooth Socket Connection failed!", Toast.LENGTH_LONG);
+            Toast toast = Toast.makeText(mmContext, "Echec de la connexion Bluetooth", Toast.LENGTH_LONG);
             toast.show();
             try {
                 mmSocket.close();
@@ -77,7 +67,7 @@ public class ConnectBThread extends Thread {
             return;
         }
         Log.d("bluetooth socket", "connection OK!");
-        Toast toast = Toast.makeText(mmContext, "Bluetooth Socket Connection success!", Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(mmContext, "Connexion Bluetooth réussie", Toast.LENGTH_LONG);
         toast.show();
         // Do work to manage the connection (in a separate thread)
        // manageConnectedSocket(mmSocket);

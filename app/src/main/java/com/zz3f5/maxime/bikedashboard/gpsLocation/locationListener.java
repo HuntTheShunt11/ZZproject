@@ -68,7 +68,7 @@ public class locationListener implements LocationTracker.LocationUpdateListener{
             alt = "Altitude  = " + height.toString();
             acc = "Accuracy  = " + accuracy.toString();
 
-            int duration = Toast.LENGTH_LONG;
+            /*int duration = Toast.LENGTH_LONG;
             Toast toast = Toast.makeText(cont, gpsLocationOrNot, duration);
             toast.show();
 
@@ -78,7 +78,7 @@ public class locationListener implements LocationTracker.LocationUpdateListener{
 
             info = alt + " " + acc;
             Toast toast2 = Toast.makeText(cont,info,duration);
-            toast2.show();
+            toast2.show();*/
 
             LatLng position = new LatLng(latitude, longitude);
 
